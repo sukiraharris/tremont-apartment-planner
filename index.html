@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
+[hidden]{display:none!important}
+html,body{margin:0}
+body{font-size:14px;-webkit-font-smoothing:antialiased}
 /* Layout: one-screen planner. Full-bleed 3D stage, catalog rail on the left, floating selection card bottom-center. */
 :root{
   --bg:#e9ece8; --panel:#fbfcfa; --ink:#1c2420; --muted:#5d6a63; --line:#d3dad5;
@@ -51,9 +54,20 @@ aside{border-right:1px solid var(--line);background:var(--panel);overflow-y:auto
 .note b{color:var(--ink)}
 .clear{border:1px solid var(--line);background:transparent;border-radius:7px;padding:7px 10px;font-size:12.5px;font-weight:600;color:var(--danger)}
 .clear[data-armed="1"]{background:var(--danger);color:var(--panel);border-color:var(--danger)}
+.tabs{position:absolute;top:10px;left:12px;right:12px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;z-index:2;pointer-events:none}
+.tabs>*{pointer-events:auto}
+.tab{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 11px;font-weight:600;font-size:12.5px;color:var(--muted);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab small{font-family:var(--f-mono);font-size:10px;opacity:.75}
+.tab[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tab-input{border:1px solid var(--accent);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 10px;font:600 12.5px var(--f-body);width:170px}
+.tab-act{border:1px dashed var(--line);background:var(--panel);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600}
+.tab-act:hover{border-color:var(--accent)}
+.tab-act.danger{color:var(--danger)}
+.tab-act[data-armed]{background:var(--danger);color:var(--panel);border-style:solid}
+.tabs .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
 #stage{position:relative;overflow:hidden;touch-action:none;min-width:0}
 #stage canvas{display:block}
-.hint{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:12.5px;color:var(--muted);box-shadow:var(--shadow);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.hint{position:absolute;left:50%;top:58px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:12.5px;color:var(--muted);box-shadow:var(--shadow);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .tag{position:absolute;pointer-events:none;transform:translate(-50%,-100%);background:var(--ink);color:var(--bg);font-family:var(--f-mono);font-size:10.5px;padding:3px 7px;border-radius:5px;white-space:nowrap}
 .card{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;max-width:calc(100% - 32px)}
 .card .nm{display:flex;flex-direction:column;min-width:0}
@@ -69,7 +83,7 @@ aside{border-right:1px solid var(--line);background:var(--panel);overflow-y:auto
 .sw button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
 .keys{position:absolute;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));font-family:var(--f-mono);font-size:10.5px;color:var(--muted);text-align:right;line-height:1.6;pointer-events:none}
 .compass{position:absolute;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));font-family:var(--f-mono);font-size:10.5px;color:var(--muted);pointer-events:none}
-.toast{position:absolute;top:16px;right:16px;background:var(--ink);color:var(--bg);padding:8px 12px;border-radius:8px;font-size:12.5px;max-width:280px}
+.toast{position:absolute;top:58px;right:16px;background:var(--ink);color:var(--bg);padding:8px 12px;border-radius:8px;font-size:12.5px;max-width:280px}
 .mobile-add{display:none}
 @media (max-width:760px){
   .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
@@ -104,7 +118,8 @@ aside{border-right:1px solid var(--line);background:var(--panel);overflow-y:auto
   </header>
   <aside id="catalog" aria-label="Furniture catalog"></aside>
   <div id="stage">
-    <div class="hint" id="hint" hidden>The apartment is empty. Pick a piece from the catalog to place it.</div>
+    <nav class="tabs" id="tabs" aria-label="Designs"></nav>
+    <div class="hint" id="hint" hidden>This design is empty. Pick a piece from the catalog to place it.</div>
     <div class="tag" id="tag" hidden></div>
     <div class="card" id="card" hidden>
       <div class="nm"><b id="c-name"></b><small id="c-dims"></small></div>
@@ -337,9 +352,9 @@ Object.entries(groups).forEach(([g,list])=>{ const sec=document.createElement('d
 const note=document.createElement('div'); note.className='note';
 note.innerHTML='<b>About this layout.</b> The rooms are traced from the listing photos: a corner unit with a bay window on Tremont St, a kitchen open to the living room with an island, a long corner bedroom, a smaller bedroom with a window AC unit, and a walk-in laundry closet. There’s no floor plan, so sizes are estimates. The kitchen, bath and washer/dryer can’t be moved. Furniture sizes are real-world standards.';
 aside.appendChild(note);
-const clr=document.createElement('button'); clr.className='clear'; clr.id='clear-all'; clr.textContent='Clear all furniture';
-let armT; clr.addEventListener('click',()=>{ if(clr.dataset.armed){ clearTimeout(armT); delete clr.dataset.armed; clr.textContent='Clear all furniture'; clearAll(); }
-  else { clr.dataset.armed='1'; clr.textContent='Tap again to remove everything'; armT=setTimeout(()=>{delete clr.dataset.armed; clr.textContent='Clear all furniture';},3000);} });
+const clr=document.createElement('button'); clr.className='clear'; clr.id='clear-all'; clr.textContent='Clear this design';
+let armT; clr.addEventListener('click',()=>{ if(clr.dataset.armed){ clearTimeout(armT); delete clr.dataset.armed; clr.textContent='Clear this design'; clearAll(); }
+  else { clr.dataset.armed='1'; clr.textContent='Tap again to clear it'; armT=setTimeout(()=>{delete clr.dataset.armed; clr.textContent='Clear this design';},3000);} });
 aside.appendChild(clr);
 $('mobile-add').addEventListener('click',()=>aside.classList.toggle('open'));
 
@@ -497,14 +512,14 @@ function build(it){ const c=BYK[it.type]; if(it.obj){ scene.remove(it.obj); root
 function place(it){ it.obj.position.set(it.x,0,it.z); it.obj.rotation.y=it.rot; }
 function upsert(id,d){ const c=BYK[d.type]; if(!c) return; const x=+d.x, z=+d.z, rot=+d.rot; if(![x,z,rot].every(Number.isFinite)) return;
   const [cx,cz]=clampXZ(x,z); const color=validColor(c,d.color); let it=items.get(id);
-  if(!it){ it={id,type:d.type,x:cx,z:cz,rot,color}; items.set(id,it); build(it); }
+  if(!it){ it={id,design:dOf(d),type:d.type,x:cx,z:cz,rot,color}; items.set(id,it); build(it); }
   else { const rebuild=it.color!==color||it.type!==d.type; Object.assign(it,{type:d.type,x:cx,z:cz,rot,color}); rebuild?build(it):place(it); }
   if(selected===id) showCard(); }
 function removeLocal(id){ const it=items.get(id); if(!it) return; scene.remove(it.obj); roots.splice(roots.indexOf(it.obj),1); items.delete(id); if(selected===id) select(null); }
 const newId=()=>'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 function addItem(k,at){ const c=BYK[k]; let x=controls.target.x, z=controls.target.z;
   if(at){ x=at.x; z=at.z; } else { x+=(Math.random()-.5)*2; z+=(Math.random()-.5)*2; if(x<1||x>22||z<-2||z>31){x=9;z=6;} }
-  const id=newId(); const it={id,type:k,x,z,rot:at?at.rot:0,color:at?at.color:defColor(c)}; [it.x,it.z]=clampXZ(it.x,it.z); items.set(id,it); build(it); select(id); save(id,true); updateHint(); }
+  const id=newId(); const it={id,design:cur,type:k,x,z,rot:at?at.rot:0,color:at?at.color:defColor(c)}; [it.x,it.z]=clampXZ(it.x,it.z); items.set(id,it); build(it); select(id); save(id,true); updateHint(); }
 function select(id){ if(selected&&items.get(selected)) items.get(selected).obj.userData.frame.visible=false; selected=id;
   if(id&&items.get(id)){ items.get(id).obj.userData.frame.visible=true; showCard(); } else { $('card').hidden=true; $('tag').hidden=true; } }
 function showCard(){ const it=items.get(selected); if(!it) return; const c=BYK[it.type]; $('c-name').textContent=c.n; $('c-dims').textContent=dims(c)+' · '+Math.round(((it.rot*180/Math.PI)%360+360)%360)+'°';
@@ -533,46 +548,95 @@ function endDrag(e){ if(dragging){ if(dragging.moved) save(dragging.id); draggin
 stage.addEventListener('pointerup',endDrag); stage.addEventListener('pointercancel',endDrag);
 
 /* ---------- persistence: shared db, or this browser ---------- */
-let db=null, mode='connecting'; const timers={}, chains={}, LKEY='tremont-unit4-layout';
+let db=null, mode='connecting'; const timers={}, chains={}, LKEY='tremont-unit4-layout', DKEY='tremont-unit4-designs', CKEY='tremont-unit4-current';
+const allDocs=new Map();   // every piece in every design: id -> stored doc
+let designs=[];            // saved designs [{id,name,order}]
+let cur='main'; try{ cur=localStorage.getItem(CKEY)||'main'; }catch{}
+const dOf=d=>(d&&typeof d.design==='string'&&d.design)?d.design:'main';
 function setStatus(m,text){ mode=m; const s=$('status'); s.dataset.s=m; s.lastElementChild.textContent=text; }
 function toast(t){ const el=$('toast'); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,4200); }
-const docOf=it=>({type:it.type,x:+it.x.toFixed(2),z:+it.z.toFixed(2),rot:+it.rot.toFixed(4),color:it.color,t:Date.now()});
-function queue(id,fn){ chains[id]=(chains[id]||Promise.resolve()).then(fn).catch(onWriteErr).finally(()=>{}); return chains[id]; }
+const docOf=it=>({type:it.type,x:+it.x.toFixed(2),z:+it.z.toFixed(2),rot:+it.rot.toFixed(4),color:it.color,design:it.design||cur,t:Date.now()});
+function queue(id,fn){ chains[id]=(chains[id]||Promise.resolve()).then(fn).catch(onWriteErr); return chains[id]; }
 function onWriteErr(e){ const code=e&&e.code; if(code==='invalid_argument'||code==='not_granted'){ setStatus('readonly','View only'); toast('You can look around, but your changes won’t be saved for others.'); }
   else if(code==='quota_exceeded') toast('The shared layout is full. Remove some pieces to add more.'); else if(code==='resource_exhausted') toast('Saving too fast. Your last change will save in a moment.'); }
-function save(id,now){ if(mode==='local'||mode==='connecting'){ saveLocal(); if(mode==='local') return; }
-  if(mode!=='shared') return; clearTimeout(timers[id]);
-  const go=()=>{ delete timers[id]; const it=items.get(id); if(!it) return; const body=docOf(it); return queue(id,()=>db.collection('items').doc(id).set(body)); };
+function putDoc(id){ const body=allDocs.get(id); if(body) queue(id,()=>db.collection('items').doc(id).set(body)); }
+function save(id,now){ const it=items.get(id); if(it) allDocs.set(id,docOf(it));
+  if(mode!=='shared'){ saveLocal(); return; }
+  clearTimeout(timers[id]); const go=()=>{ delete timers[id]; putDoc(id); };
   if(now) go(); else timers[id]=setTimeout(go,350); }
-function remove(id){ clearTimeout(timers[id]); delete timers[id]; if(mode==='shared') queue(id,()=>db.collection('items').doc(id).delete()); else saveLocal(); }
+function remove(id){ clearTimeout(timers[id]); delete timers[id]; allDocs.delete(id); if(mode==='shared') queue(id,()=>db.collection('items').doc(id).delete()); else saveLocal(); }
+function flushAll(){ Object.keys(timers).forEach(id=>{ clearTimeout(timers[id]); delete timers[id]; if(mode==='shared') putDoc(id); }); }
 function clearAll(){ [...items.keys()].forEach(id=>{ removeLocal(id); remove(id); }); updateHint(); }
-function saveLocal(){ try{ localStorage.setItem(LKEY,JSON.stringify([...items.values()].map(it=>({id:it.id,...docOf(it)})))); }catch{} }
+function saveLocal(){ try{ localStorage.setItem(LKEY,JSON.stringify([...allDocs].map(([id,d])=>({id,...d})))); localStorage.setItem(DKEY,JSON.stringify(designs)); }catch{} }
 const STARTER=[
-  {id:'starter-rug',type:'rug810',x:8,z:5.75,rot:1.5708,color:'#ddd5c6'},
-  {id:'starter-sofa',type:'sofa',x:8,z:9.2,rot:3.1416,color:'#6f7f86'},
-  {id:'starter-coffee',type:'coffee',x:8,z:6.1,rot:0,color:'#6a4630'},
-  {id:'starter-armchair',type:'armchair',x:4,z:3.25,rot:1.0472,color:'#8d5636'},
-  {id:'starter-lamp',type:'lamp',x:1.4,z:9.6,rot:0,color:'#b08d57'},
-  {id:'starter-plant',type:'plant',x:17,z:-2.1,rot:0,color:'#b5694a'},
+  {id:'starter-rug',type:'rugGeo810',x:6.5,z:7,rot:1.5708,color:'#a3644b'},
+  {id:'starter-sofa',type:'sofa',x:6.75,z:2.75,rot:0,color:'#c8ac7f'},
+  {id:'sofa-pillows',type:'pillows',x:7,z:2.5,rot:0,color:'#480c14'},
+  {id:'starter-coffee',type:'coffeeRound',x:7.25,z:7.25,rot:0,color:'#cfe3e6'},
+  {id:'tv-console',type:'tv',x:6.75,z:11,rot:3.1416,color:'#6a4630'},
+  {id:'arc-lamp',type:'arclamp',x:4.25,z:3.25,rot:-0.5236,color:'#e8651f'},
+  {id:'artwork-1',type:'art',x:0.55,z:9.5,rot:1.5708,color:'#b5583a'},
+  {id:'bay-chair-1',type:'armchair',x:14.75,z:0,rot:0.35,color:'#2e4636'},
+  {id:'bay-chair-2',type:'armchair',x:19.5,z:-0.5,rot:-0.35,color:'#2e4636'},
+  {id:'floor-mirror',type:'mirror',x:22,z:8.25,rot:-1.5708,color:'#e9e7e1'},
   {id:'starter-stool-1',type:'stool',x:16.8,z:12.1,rot:0,color:'#8d5636'},
   {id:'starter-stool-2',type:'stool',x:19.7,z:12.1,rot:0,color:'#8d5636'},
 ];
-function loadLocal(){ let arr=null; try{ const raw=localStorage.getItem(LKEY); if(raw!==null) arr=JSON.parse(raw); }catch{}
-  if(!Array.isArray(arr)) arr=STARTER; arr.forEach(d=>d&&typeof d.id==='string'&&upsert(d.id,d)); }
+function loadLocal(){ let arr=null, ds=null; try{ const raw=localStorage.getItem(LKEY); if(raw!==null) arr=JSON.parse(raw); ds=JSON.parse(localStorage.getItem(DKEY)||'null'); }catch{}
+  if(!Array.isArray(arr)) arr=STARTER; arr.forEach(d=>{ if(d&&typeof d.id==='string'&&BYK[d.type]){ const {id,...rest}=d; allDocs.set(id,rest); } });
+  designs=Array.isArray(ds)?ds.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'):[];
+  if(!designList().find(d=>d.id===cur)) cur=designList()[0].id; showDesign(cur); }
 function updateHint(){ $('hint').hidden=items.size>0||mode==='connecting'; }
 
+/* ---------- designs (tabs) ---------- */
+let renaming=false;
+function designList(){ const l=designs.slice().sort((a,b)=>(a.order||0)-(b.order||0)); if(!l.length) l.push({id:'main',name:'Design 1',order:0}); return l; }
+function materialize(){ if(!designs.length){ designs=designList().map(d=>({...d})); designs.forEach(saveDesign); } }
+function saveDesign(d){ if(mode==='shared') queue('design:'+d.id,()=>db.collection('designs').doc(d.id).set({name:d.name,order:d.order||0})); else saveLocal(); }
+function showDesign(id){ flushAll(); select(null); [...items.keys()].forEach(removeLocal); cur=id; try{ localStorage.setItem(CKEY,id); }catch{}
+  allDocs.forEach((d,k)=>{ if(dOf(d)===cur) upsert(k,d); }); renderTabs(); updateHint(); }
+function newDesign(copy){ materialize(); const list=designList(), from=list.find(d=>d.id===cur);
+  const id='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const d={id,name:(copy&&from?from.name+' copy':'Design '+(list.length+1)).slice(0,40),order:Math.max(0,...list.map(x=>x.order||0))+1};
+  designs.push(d); saveDesign(d);
+  if(copy){ flushAll(); [...allDocs].filter(([,v])=>dOf(v)===cur).forEach(([,v])=>{ const nid=newId(); allDocs.set(nid,{...v,design:id,t:Date.now()}); if(mode==='shared') putDoc(nid); }); if(mode!=='shared') saveLocal(); }
+  showDesign(id); toast(copy?`Copied into “${d.name}”.`:`Started “${d.name}”. Pick furniture from the catalog.`); }
+function deleteDesign(id){ const list=designList(); if(list.length<2) return; const gone=list.find(d=>d.id===id);
+  [...allDocs].filter(([,v])=>dOf(v)===id).forEach(([k])=>{ if(items.has(k)) removeLocal(k); remove(k); });
+  designs=designs.filter(d=>d.id!==id); if(mode==='shared') queue('design:'+id,()=>db.collection('designs').doc(id).delete()); else saveLocal();
+  showDesign(designList()[0].id); if(gone) toast(`Deleted “${gone.name}”.`); }
+function startRename(){ const d=designList().find(x=>x.id===cur), btn=document.querySelector('.tab[aria-pressed="true"]'); if(!d||!btn) return; renaming=true;
+  const inp=document.createElement('input'); inp.className='tab-input'; inp.id='rename-design'; inp.value=d.name; inp.maxLength=40; inp.setAttribute('aria-label','Design name'); btn.replaceWith(inp); inp.focus(); inp.select();
+  let done=false; const finish=ok=>{ if(done) return; done=true; renaming=false; tabSig=''; const v=inp.value.trim().slice(0,40);
+    if(ok&&v&&v!==d.name){ materialize(); const real=designs.find(x=>x.id===cur); real.name=v; saveDesign(real); } renderTabs(); };
+  inp.addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') finish(true); else if(e.key==='Escape') finish(false); }); inp.addEventListener('blur',()=>finish(true)); }
+let tabSig='';
+function renderTabs(){ if(renaming) return; const list=designList(); const counts={}; allDocs.forEach(v=>{ const k=dOf(v); counts[k]=(counts[k]||0)+1; });
+  const sig=JSON.stringify([cur,list.map(d=>[d.id,d.name]),counts]); if(sig===tabSig) return; tabSig=sig; const bar=$('tabs'); bar.textContent='';
+  list.forEach(d=>{ const b=document.createElement('button'); b.className='tab'; b.id='tab-'+d.id; b.setAttribute('aria-pressed',d.id===cur); b.textContent=d.name||'Untitled';
+    const n=counts[d.id]||0; const sm=document.createElement('small'); sm.textContent=n; b.appendChild(sm);
+    b.title=d.id===cur?'Double-click to rename':'Open this design'; b.onclick=()=>{ if(d.id!==cur) showDesign(d.id); }; b.ondblclick=()=>{ if(d.id===cur) startRename(); }; bar.appendChild(b); });
+  const sep=document.createElement('span'); sep.className='sep'; bar.appendChild(sep);
+  const act=(id,label,fn,cls)=>{ const b=document.createElement('button'); b.className='tab-act'+(cls?' '+cls:''); b.id=id; b.textContent=label; b.onclick=fn; bar.appendChild(b); return b; };
+  act('design-new','+ New',()=>newDesign(false)); act('design-dup','Duplicate',()=>newDesign(true)); act('design-rename','Rename',startRename);
+  if(list.length>1){ const del=act('design-del','Delete','','danger'); let t; del.onclick=()=>{ if(del.dataset.armed){ clearTimeout(t); deleteDesign(cur); } else { del.dataset.armed='1'; del.textContent='Delete this design?'; t=setTimeout(()=>{ delete del.dataset.armed; del.textContent='Delete'; },3000); } }; } }
+
 async function connect(){
-  if(!window.claude||!window.claude.use){ setStatus('local','Saved in this browser'); loadLocal(); updateHint(); return; }
+  if(!window.claude||!window.claude.use){ setStatus('local','Saved in this browser'); loadLocal(); return; }
   let ns=null; try{ ns=await window.claude.use('db'); }catch{}
-  if(!ns){ setStatus('local','Saved in this browser'); loadLocal(); updateHint(); return; }
+  if(!ns){ setStatus('local','Saved in this browser'); loadLocal(); return; }
   db=ns; let settled=false; const slow=setTimeout(()=>{ if(!settled){ setStatus('connecting','Can’t reach the shared layout yet'); } },10000);
+  renderTabs();
+  db.collection('designs').onSnapshot(s=>{ designs=s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>typeof d.name==='string');
+    if(!designList().find(d=>d.id===cur)) showDesign(designList()[0].id); else renderTabs(); }, ()=>{});
   db.collection('items').onSnapshot(snap=>{
     if(!snap.metadata.fromCache){ settled=true; clearTimeout(slow); }
     if(mode!=='readonly') setStatus('shared', snap.metadata.fromCache?'Shared · syncing':'Shared · live');
     const seen=new Set();
-    snap.docs.forEach(d=>{ seen.add(d.id); if((dragging&&dragging.id===d.id)||timers[d.id]) return; const data=d.data(); if(data) upsert(d.id,data); });
-    [...items.keys()].forEach(id=>{ if(!seen.has(id)&&!timers[id]&&!(dragging&&dragging.id===id)&&!snap.metadata.hasPendingWrites) removeLocal(id); });
-    updateHint();
+    snap.docs.forEach(d=>{ const data=d.data(); if(!data) return; seen.add(d.id); if((dragging&&dragging.id===d.id)||timers[d.id]) return; allDocs.set(d.id,data);
+      if(dOf(data)===cur) upsert(d.id,data); else if(items.has(d.id)) removeLocal(d.id); });
+    if(!snap.metadata.hasPendingWrites) [...allDocs.keys()].forEach(id=>{ if(!seen.has(id)&&!timers[id]&&!(dragging&&dragging.id===id)){ allDocs.delete(id); removeLocal(id); } });
+    renderTabs(); updateHint();
   }, err=>{ clearTimeout(slow); setStatus('local','Offline · saved in this browser'); toast('Lost the shared layout. Changes now save only in this browser.'); });
 }
 connect();
