@@ -339,6 +339,18 @@ function marbleTable(R,h,c){ const g=new THREE.Group(), m=new THREE.MeshStandard
   pts.unshift(new THREE.Vector2(0,0)); pts.push(new THREE.Vector2(0,ph));
   const ped=new THREE.Mesh(new THREE.LatheGeometry(pts,48),m); ped.castShadow=true; ped.receiveShadow=true; g.add(ped); return g; }
 
+function slingChair(c){ const g=new THREE.Group(), chrome=new THREE.MeshStandardMaterial({color:new THREE.Color('#d4d8db').convertSRGBToLinear(),roughness:.2,metalness:.75}), lea=M(c,.55);
+  const P=[[.8,1.62],[.7,1.565],[.45,1.525],[.1,1.505],[-.22,1.52],[-.45,1.6],[-.6,1.8],[-.68,2.1],[-.73,2.45],[-.72,2.72]], T=.07;
+  const top=P.map(([z,y])=>new THREE.Vector2(z,y)), bot=[];
+  top.forEach((p,i)=>{ const a=top[Math.max(0,i-1)], b=top[Math.min(top.length-1,i+1)], dz=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dz,dy); bot.push(new THREE.Vector2(p.x+dy/L*T,p.y-dz/L*T)); });
+  const sh=new THREE.Shape([...top,...bot.reverse()]); const W=1.42;
+  const shell=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:W-.08,bevelEnabled:true,bevelThickness:.04,bevelSize:.025,bevelSegments:3,curveSegments:4}),lea);
+  shell.rotation.y=-Math.PI/2; shell.position.x=(W-.08)/2; shell.castShadow=true; shell.receiveShadow=true; g.add(shell);
+  const x=.66, pts=[[-x+.04,2.55,-.7],[-x,1.8,-.75],[-x,.9,-.66],[-x,.06,-.5],[-x,.04,.1],[-x+.06,.04,.48],[-x*.6,.04,.72],[0,.04,.78],[x*.6,.04,.72],[x-.06,.04,.48],[x,.04,.1],[x,.06,-.5],[x,.9,-.66],[x,1.8,-.75],[x-.04,2.55,-.7]].map(([a,b,c2])=>new THREE.Vector3(a,b,c2));
+  const tube=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,false,'centripetal'),120,.04,8,false),chrome); tube.scale.set(1,1,1); tube.castShadow=true; g.add(tube);
+  [-1,1].forEach(s=>bx(g,.5,.05,.08,chrome,s*.42,1.44,-.4));
+  return g; }
+
 const CAT = [
   {k:'sofa',n:'Sofa',g:'Living room',w:7,d:3,pal:FABRIC,b:c=>sofa(7,3,c)},
   {k:'loveseat',n:'Loveseat',g:'Living room',w:5,d:2.83,pal:FABRIC,b:c=>sofa(5,2.83,c)},
@@ -356,6 +368,7 @@ const CAT = [
   {k:'dining',n:'Dining table',g:'Dining & kitchen',w:5,d:3,pal:WOOD,b:c=>table(5,3,2.5,c)},
   {k:'diningRound',n:'Round dining table',g:'Dining & kitchen',w:3.5,d:3.5,pal:WOOD,b:c=>roundTable(1.75,2.5,c,true)},
   {k:'marbledining',n:'Marble pedestal dining table',g:'Dining & kitchen',w:3.5,d:3.5,pal:{Emperador:'#3b2a20',Nero:'#1f1d1c',Travertine:'#cdb796',Carrara:'#e6e4df'},b:c=>marbleTable(1.75,2.5,c)},
+  {k:'slingchair',n:'Leather sling dining chair',g:'Dining & kitchen',w:1.6,d:1.7,pal:{'Brown leather':'#5a2e22',Black:'#1c1b1a',Tan:'#9a6a43'},b:c=>slingChair(c)},
   {k:'chair',n:'Dining chair',g:'Dining & kitchen',w:1.5,d:1.75,pal:WOOD,b:c=>chair(c)},
   {k:'stool',n:'Counter stool',g:'Dining & kitchen',w:1.33,d:1.33,pal:{Leather:'#8d5636',...WOOD},b:c=>stool(c)},
   {k:'queen',n:'Queen bed',g:'Bedroom',w:5.33,d:7.17,pal:FABRIC,b:c=>bed(5.33,7.17,c,2)},
@@ -624,6 +637,10 @@ const STARTER=[
   {id:'sofa-pillows',type:'pillows',x:7,z:2.5,rot:0,color:'#480c14'},
   {id:'starter-coffee',type:'coffeeRound',x:7.25,z:7.25,rot:0,color:'#cfe3e6'},
   {id:'dining-table',type:'marbledining',x:17.3,z:6.6,rot:0,color:'#3b2a20'},
+  {id:'dining-chair-n',type:'slingchair',x:17.3,z:4.25,rot:0,color:'#5a2e22'},
+  {id:'dining-chair-s',type:'slingchair',x:17.3,z:8.95,rot:3.1416,color:'#5a2e22'},
+  {id:'dining-chair-w',type:'slingchair',x:14.95,z:6.6,rot:1.5708,color:'#5a2e22'},
+  {id:'dining-chair-e',type:'slingchair',x:19.65,z:6.6,rot:-1.5708,color:'#5a2e22'},
   {id:'tv-console',type:'tv',x:6.75,z:11,rot:3.1416,color:'#6a4630'},
   {id:'arc-lamp',type:'arclamp',x:4.25,z:3.25,rot:-0.5236,color:'#e8651f'},
   {id:'artwork-1',type:'art',x:0.55,z:9.5,rot:1.5708,color:'#b5583a'},
