@@ -163,7 +163,10 @@ function sectional(w,d,c){ const g=new THREE.Group(); const main=sofa(w,3,c); ma
 function ottoman(w,d,c){ const g=new THREE.Group(); bx(g,w,1.2,d,M(c),0,.2,0); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>bx(g,.12,.2,.12,M('#2b241f'),a*(w/2-.2),0,b*(d/2-.2))); return g; }
 function table(w,d,h,c,legs=true){ const g=new THREE.Group(), f=M(c,.6); bx(g,w,.13,d,f,0,h-.13,0);
   if(legs)[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>bx(g,.16,h-.13,.16,f,a*(w/2-.22),0,b*(d/2-.22))); return g; }
-function roundTable(r,h,c,ped){ const g=new THREE.Group(), f=M(c,.6); cy(g,r,r,.12,f,0,h-.12,0,40);
+const GLASS_TOP='#cfe3e6';
+function roundTable(r,h,c,ped){ const g=new THREE.Group(); const glass=c===GLASS_TOP; const f=glass?M('#d6d9dc',.15,.9):M(c,.6);
+  if(glass){ const t=cy(g,r,r,.08,new THREE.MeshStandardMaterial({color:'#d4ecee',roughness:.05,metalness:.1,transparent:true,opacity:.35}),0,h-.08,0,48); t.castShadow=false; const e=new THREE.Mesh(new THREE.TorusGeometry(r,.03,8,64),new THREE.MeshStandardMaterial({color:'#a8d0d2',roughness:.1,transparent:true,opacity:.7})); e.rotation.x=Math.PI/2; e.position.y=h-.04; g.add(e); }
+  else cy(g,r,r,.12,f,0,h-.12,0,40);
   if(ped){ cy(g,.16,.2,h-.12,f); cy(g,r*.45,r*.5,.1,f); } else { for(let i=0;i<3;i++){ const a=i*Math.PI*2/3; cy(g,.06,.06,h-.12,f,Math.cos(a)*r*.62,0,Math.sin(a)*r*.62,10); } } return g; }
 function chair(c){ const g=new THREE.Group(), f=M(c,.6); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>bx(g,.12,1.5,.12,f,a*.62,0,b*.62+.12));
   bx(g,1.45,.12,1.45,f,0,1.5,.12); bx(g,1.45,1.35,.1,f,0,1.62,-.68); return g; }
@@ -238,7 +241,7 @@ const CAT = [
   {k:'armchair',n:'Armchair',g:'Living room',w:2.75,d:2.9,pal:FABRIC,b:c=>sofa(2.75,2.9,c)},
   {k:'ottoman',n:'Ottoman',g:'Living room',w:2,d:2,pal:FABRIC,b:c=>ottoman(2,2,c)},
   {k:'coffee',n:'Coffee table',g:'Living room',w:4,d:2,pal:WOOD,b:c=>table(4,2,1.4,c)},
-  {k:'coffeeRound',n:'Round coffee table',g:'Living room',w:3,d:3,pal:WOOD,b:c=>roundTable(1.5,1.4,c,true)},
+  {k:'coffeeRound',n:'Round coffee table',g:'Living room',w:3,d:3,pal:{Glass:GLASS_TOP,...WOOD},b:c=>roundTable(1.5,1.4,c,true)},
   {k:'side',n:'Side table',g:'Living room',w:1.67,d:1.67,pal:WOOD,b:c=>table(1.67,1.67,1.9,c)},
   {k:'tv',n:'Media console + TV',g:'Living room',w:5.5,d:1.5,pal:WOOD,b:c=>tvConsole(5.5,1.5,c)},
   {k:'bookshelf',n:'Bookshelf',g:'Living room',w:3,d:1,pal:WOOD,b:c=>bookshelf(3,1,6,c)},
