@@ -270,11 +270,16 @@ function paperLamp(c){ const g=new THREE.Group(), st=M(c,.35,.5); cy(g,.42,.48,.
   const rib=M('#e2d3b6',.9); for(let i=-3;i<=3;i++){ const yy=i*.28*1.08, rr=Math.sqrt(Math.max(0,r*r-(i*.28)**2))+.005; const t=new THREE.Mesh(new THREE.TorusGeometry(rr,.012,6,64),rib); t.rotation.x=Math.PI/2; t.position.y=cyY+yy; g.add(t); }
   return g; }
 
+function throwPillows(w,c){ const g=new THREE.Group(), f=M(c,.95);
+  [-1,1].forEach(s=>{ const p=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),f); p.scale.set(.8,.76,.24); p.position.set(s*(w/2-.85),2.2,0); p.rotation.set(-.28,s*-.12,s*.06); p.castShadow=true; p.receiveShadow=true; g.add(p); });
+  return g; }
+
 const CAT = [
   {k:'sofa',n:'Sofa',g:'Living room',w:7,d:3,pal:FABRIC,b:c=>sofa(7,3,c)},
   {k:'loveseat',n:'Loveseat',g:'Living room',w:5,d:2.83,pal:FABRIC,b:c=>sofa(5,2.83,c)},
   {k:'sectional',n:'L-sectional',g:'Living room',w:9.33,d:6.5,pal:FABRIC,b:c=>sectional(9.33,6.5,c)},
   {k:'armchair',n:'Armchair',g:'Living room',w:2.75,d:2.9,pal:FABRIC,b:c=>sofa(2.75,2.9,c)},
+  {k:'pillows',n:'Throw pillows (pair)',g:'Living room',w:5.2,d:.8,pal:{Red:'#b3202a',Burgundy:'#6b1f2a',Rust:'#a5634b',Cream:'#efe6d2','Rome green':'#2e4636',Cobalt:'#1f47a8'},b:c=>throwPillows(5.2,c)},
   {k:'ottoman',n:'Ottoman',g:'Living room',w:2,d:2,pal:FABRIC,b:c=>ottoman(2,2,c)},
   {k:'coffee',n:'Coffee table',g:'Living room',w:4,d:2,pal:WOOD,b:c=>table(4,2,1.4,c)},
   {k:'coffeeRound',n:'Round coffee table',g:'Living room',w:3.5,d:3.5,pal:{Glass:GLASS_TOP,...WOOD},b:c=>roundTable(1.75,1.4,c,true)},
