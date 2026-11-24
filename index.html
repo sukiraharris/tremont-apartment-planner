@@ -148,18 +148,25 @@ function cy(g,rt,rb,h,mat,x=0,y=0,z=0,seg=28){ const m=new THREE.Mesh(new THREE.
 let seed=1; const rnd=()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; };
 
 /* ---------- furniture builders (feet; front faces +z) ---------- */
-function sofa(w,d,c){ const g=new THREE.Group(), f=M(c), f2=M(shade(c,.04)), lg=M('#2b241f',.6);
-  const legH=.35, armW=Math.min(.55,w*.18), baseH=.75;
-  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>bx(g,.15,legH,.15,lg,sx*(w/2-.25),0,sz*(d/2-.25)));
-  bx(g,w,baseH,d,f,0,legH,0);
+const rbGeo=new Map();
+function rbox(g,w,h,d,r,mat,x=0,y=0,z=0){ r=Math.min(r,w/2-.02,h/2-.02,d/2-.02); const k=[w,h,d,r].map(v=>v.toFixed(3)).join();
+  let geo=rbGeo.get(k); if(!geo){ const a=w/2-r, b=h/2-r, e=.01, s=new THREE.Shape();
+    s.moveTo(-a+e,-b); s.lineTo(a-e,-b); s.absarc(a-e,-b+e,e,-Math.PI/2,0); s.lineTo(a,b-e); s.absarc(a-e,b-e,e,0,Math.PI/2);
+    s.lineTo(-a+e,b); s.absarc(-a+e,b-e,e,Math.PI/2,Math.PI); s.lineTo(-a,-b+e); s.absarc(-a+e,-b+e,e,Math.PI,Math.PI*1.5);
+    geo=new THREE.ExtrudeGeometry(s,{depth:Math.max(.002,d-2*r),bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:6,curveSegments:6}); geo.center(); geo.computeVertexNormals(); rbGeo.set(k,geo); }
+  const m=new THREE.Mesh(geo,mat); m.position.set(x,y+h/2,z); m.castShadow=true; m.receiveShadow=true; g.add(m); return m; }
+function sofa(w,d,c){ const g=new THREE.Group(), f=M(c,.95), f2=M(shade(c,.035),.95), lg=M('#2b241f',.6);
+  const legH=.3, armW=Math.min(.68,w*.2), baseH=.78;
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([sx,sz])=>cy(g,.06,.04,legH,lg,sx*(w/2-.35),0,sz*(d/2-.35),12));
+  rbox(g,w,baseH,d,.2,f,0,legH,0);
   const inner=w-2*armW, n=inner>4.5?3:inner>2.6?2:1, cw=inner/n;
-  for(let i=0;i<n;i++){ const x=-inner/2+cw*(i+.5); bx(g,cw-.05,.42,d-.75,f2,x,legH+baseH,.3); bx(g,cw-.08,1.2,.45,f2,x,legH+baseH+.4,-d/2+.8); }
-  bx(g,inner,1.5,.6,f,0,legH+baseH,-d/2+.3);
-  [-1,1].forEach(s=>bx(g,armW,baseH+.6,d,f,s*(w/2-armW/2),legH,0));
+  rbox(g,inner+.2,1.6,.75,.34,f,0,legH+baseH-.15,-d/2+.38);
+  for(let i=0;i<n;i++){ const x=-inner/2+cw*(i+.5); rbox(g,cw-.02,.52,d-.78,.22,f2,x,legH+baseH-.1,.32); rbox(g,cw-.04,1.3,.62,.28,f2,x,legH+baseH+.3,-d/2+.82); }
+  [-1,1].forEach(s=>rbox(g,armW,baseH+.62,d,.32,f,s*(w/2-armW/2),legH,0));
   return g; }
 function sectional(w,d,c){ const g=new THREE.Group(); const main=sofa(w,3,c); main.position.z=-d/2+1.5; g.add(main);
-  const f=M(c), f2=M(shade(c,.04)), cd=d-3; const x=w/2-1.5-.275;
-  bx(g,3,.75,cd,f,x,.35,-d/2+3+cd/2); bx(g,2.9,.42,cd-.1,f2,x,1.1,-d/2+3+cd/2); bx(g,.55,1.35,cd,f,w/2-.275,.35,-d/2+3+cd/2);
+  const f=M(c), f2=M(shade(c,.04)), cd=d-3; const x=w/2-1.5-.34;
+  bx(g,3,.75,cd,f,x,.35,-d/2+3+cd/2); bx(g,2.9,.42,cd-.1,f2,x,1.1,-d/2+3+cd/2); rbox(g,.68,1.4,cd,.32,f,w/2-.34,.3,-d/2+3+cd/2);
   bx(g,.15,.35,.15,M('#2b241f'),x,0,d/2-.25); return g; }
 function ottoman(w,d,c){ const g=new THREE.Group(); bx(g,w,1.2,d,M(c),0,.2,0); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>bx(g,.12,.2,.12,M('#2b241f'),a*(w/2-.2),0,b*(d/2-.2))); return g; }
 function table(w,d,h,c,legs=true){ const g=new THREE.Group(), f=M(c,.6); bx(g,w,.13,d,f,0,h-.13,0);
