@@ -132,11 +132,12 @@ const $ = id => document.getElementById(id);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ---------- palettes ---------- */
-const FABRIC = {Oat:'#cbbba0',Linen:'#e2dccf',Slate:'#6f7f86',Navy:'#34465c',Olive:'#69734f','Rome green':'#2e4636',Cognac:'#8d5636',Blush:'#d3a89a',Charcoal:'#3b3d3f'};
-const WOOD = {Oak:'#b98d5f',Walnut:'#6a4630',Ash:'#dcc8a6',Black:'#2a2a2a',White:'#e9e7e1'};
+const FABRIC = {Oat:'#cbbba0',Cream:'#efe6d2',Linen:'#e2dccf',Slate:'#6f7f86',Navy:'#34465c',Olive:'#69734f','Rome green':'#2e4636',Cognac:'#8d5636',Blush:'#d3a89a',Charcoal:'#3b3d3f'};
+const WOOD = {Oak:'#b98d5f',Walnut:'#6a4630',Ash:'#dcc8a6',Black:'#2a2a2a',White:'#e9e7e1',Burgundy:'#5e1f26'};
 const RUG = {Wool:'#ddd5c6',Sage:'#98a58f',Rust:'#a5634b',Indigo:'#3f4e6b',Stone:'#a9a39a'};
 const POT = {Terracotta:'#b5694a',White:'#eeeae2',Black:'#2b2b2b'};
-const METAL = {Brass:'#b08d57',Black:'#2a2a2a',White:'#eeeae2'};
+const METAL = {Brass:'#b08d57',Black:'#2a2a2a',White:'#eeeae2','Cherry red':'#b3122e'};
+const LACQUER = {Cobalt:'#1f47a8','Cherry red':'#b3122e'};
 
 /* ---------- three helpers ---------- */
 const matCache = new Map();
@@ -234,6 +235,41 @@ function arcLamp(c){ const g=new THREE.Group(), chrome=M('#d6d9dc',.15,.9);
   const glow=new THREE.Mesh(new THREE.CircleGeometry(.64,32),new THREE.MeshStandardMaterial({color:'#fff3d6',emissive:'#ffd9a0',emissiveIntensity:.9}));
   glow.rotation.x=Math.PI/2; glow.position.set(2.1,6.47,0); g.add(glow); return g; }
 
+const texCache=new Map();
+function vintageTexture(c){ const key='v'+c; if(texCache.has(key)) return texCache.get(key); const W=400,H=500, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const x=cv.getContext('2d');
+  const dk=shade(c,-.09), lt=shade(c,.08), IV='#e6d6b8', NV='#25304a', GD='#b58a4a'; seed=31;
+  x.fillStyle=c; x.fillRect(0,0,W,H);
+  for(let y=0;y<H;y+=6){ x.fillStyle=`rgba(${rnd()<.5?'0,0,0':'255,230,210'},${rnd()*.06})`; x.fillRect(0,y,W,6); } // abrash bands
+  const band=(i,col,w)=>{ x.strokeStyle=col; x.lineWidth=w; x.strokeRect(i,i,W-2*i,H-2*i); };
+  band(14,NV,22); band(28,IV,3); band(40,dk,16); band(52,GD,2.5); band(60,IV,1.5);
+  for(let i=0;i<34;i++){ const t=i/34; [[14+t*(W-28),14],[14+t*(W-28),H-14],[14,14+t*(H-28)],[W-14,14+t*(H-28)]].forEach(([px,py])=>{ x.fillStyle=i%2?GD:IV; x.beginPath(); x.arc(px,py,3.2,0,7); x.fill(); }); }
+  const lozenge=(cx,cy,rx,ry,col)=>{ x.fillStyle=col; x.beginPath(); x.moveTo(cx,cy-ry); x.lineTo(cx+rx,cy); x.lineTo(cx,cy+ry); x.lineTo(cx-rx,cy); x.closePath(); x.fill(); };
+  lozenge(W/2,H/2,120,170,NV); lozenge(W/2,H/2,104,150,dk); lozenge(W/2,H/2,72,104,IV); lozenge(W/2,H/2,58,86,c); lozenge(W/2,H/2,26,38,NV); lozenge(W/2,H/2,12,18,GD);
+  [[W/2,H/2-185],[W/2,H/2+185]].forEach(([cx,cy])=>{ lozenge(cx,cy,22,18,NV); lozenge(cx,cy,10,8,IV); });
+  [[66,66],[W-66,66],[66,H-66],[W-66,H-66]].forEach(([cx,cy])=>{ x.fillStyle=NV; x.beginPath(); x.moveTo(cx,cy); x.lineTo(cx+(cx<W/2?60:-60),cy); x.lineTo(cx,cy+(cy<H/2?60:-60)); x.fill(); });
+  for(let i=0;i<70;i++){ const px=80+rnd()*(W-160), py=80+rnd()*(H-160); x.fillStyle=[IV,GD,NV,lt][Math.floor(rnd()*4)]; x.globalAlpha=.55; x.fillRect(px,py,4,4); x.globalAlpha=1; }
+  for(let i=0;i<14;i++){ const g=x.createRadialGradient(0,0,0,0,0,30+rnd()*50); g.addColorStop(0,'rgba(240,215,190,.22)'); g.addColorStop(1,'rgba(240,215,190,0)'); x.save(); x.translate(rnd()*W,rnd()*H); x.fillStyle=g; x.fillRect(-80,-80,160,160); x.restore(); } // worn patches
+  for(let i=0;i<3000;i++){ x.fillStyle=rnd()<.5?'rgba(255,240,220,.07)':'rgba(0,0,0,.08)'; x.fillRect(rnd()*W,rnd()*H,1,2+rnd()*3); }
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; t.anisotropy=8; texCache.set(key,t); return t; }
+function rugVintage(w,d,c){ const g=new THREE.Group(), side=M(shade(c,-.1),1), top=new THREE.MeshStandardMaterial({map:vintageTexture(c),roughness:1});
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,.045,d),[side,side,top,side,side,side]); m.position.y=.0225; m.receiveShadow=true; g.add(m);
+  [-1,1].forEach(s=>bx(g,w-.3,.012,.22,M('#e8dcc4',1),0,0,s*(d/2+.11),false)); return g; }
+function artTexture(c){ const key='a'+c; if(texCache.has(key)) return texCache.get(key); const W=500,H=350, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const x=cv.getContext('2d'); seed=41;
+  x.fillStyle='#efe7d8'; x.fillRect(0,0,W,H);
+  const blob=(cx,cy,r,col,a=1)=>{ x.globalAlpha=a; x.fillStyle=col; x.beginPath(); for(let k=0;k<=24;k++){ const ang=k/24*Math.PI*2, rr=r*(.82+rnd()*.3); x.lineTo(cx+Math.cos(ang)*rr*1.25,cy+Math.sin(ang)*rr); } x.closePath(); x.fill(); x.globalAlpha=1; };
+  blob(170,170,120,c); blob(330,150,95,'#d9a441',.92); blob(260,240,70,shade(c,-.15),.9); blob(395,255,48,'#1f2a3d'); blob(110,80,40,'#c8452e',.85);
+  x.strokeStyle='#1f2a3d'; x.lineWidth=5; x.beginPath(); x.moveTo(40,300); x.bezierCurveTo(170,180,300,330,460,70); x.stroke();
+  for(let i=0;i<1800;i++){ x.fillStyle=rnd()<.5?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)'; x.fillRect(rnd()*W,rnd()*H,2,2); }
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; texCache.set(key,t); return t; }
+function artwork(c){ const g=new THREE.Group(), W=5, H=3.5, fr=M('#1d1b19',.5);
+  const canvas=new THREE.Mesh(new THREE.BoxGeometry(W,H,.12),[fr,fr,fr,fr,new THREE.MeshStandardMaterial({map:artTexture(c),roughness:.9}),fr]); canvas.position.set(0,5.4,0); canvas.castShadow=true; g.add(canvas);
+  [[W+.12,.08,0,H/2+.04],[W+.12,.08,0,-H/2-.04],[.08,H,W/2+.04,0],[.08,H,-W/2-.04,0]].forEach(([a,b,ox,oy])=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(a,b,.18),fr); m.position.set(ox,5.4+oy,0); g.add(m); });
+  return g; }
+function paperLamp(c){ const g=new THREE.Group(), st=M(c,.35,.5); cy(g,.42,.48,.08,st,0,0,0,30); cy(g,.03,.03,3.7,st,0,.08,0,8);
+  const r=1.1, cyY=4.85; const sh=new THREE.Mesh(new THREE.SphereGeometry(r,40,24),M('#f7f0e1',.95,0,'#ffe2b0')); sh.scale.y=1.08; sh.position.y=cyY; sh.castShadow=true; g.add(sh);
+  const rib=M('#e2d3b6',.9); for(let i=-3;i<=3;i++){ const yy=i*.28*1.08, rr=Math.sqrt(Math.max(0,r*r-(i*.28)**2))+.005; const t=new THREE.Mesh(new THREE.TorusGeometry(rr,.012,6,64),rib); t.rotation.x=Math.PI/2; t.position.y=cyY+yy; g.add(t); }
+  return g; }
+
 const CAT = [
   {k:'sofa',n:'Sofa',g:'Living room',w:7,d:3,pal:FABRIC,b:c=>sofa(7,3,c)},
   {k:'loveseat',n:'Loveseat',g:'Living room',w:5,d:2.83,pal:FABRIC,b:c=>sofa(5,2.83,c)},
@@ -242,7 +278,7 @@ const CAT = [
   {k:'ottoman',n:'Ottoman',g:'Living room',w:2,d:2,pal:FABRIC,b:c=>ottoman(2,2,c)},
   {k:'coffee',n:'Coffee table',g:'Living room',w:4,d:2,pal:WOOD,b:c=>table(4,2,1.4,c)},
   {k:'coffeeRound',n:'Round coffee table',g:'Living room',w:3.5,d:3.5,pal:{Glass:GLASS_TOP,...WOOD},b:c=>roundTable(1.75,1.4,c,true)},
-  {k:'side',n:'Side table',g:'Living room',w:1.67,d:1.67,pal:WOOD,b:c=>table(1.67,1.67,1.9,c)},
+  {k:'side',n:'Side table',g:'Living room',w:1.67,d:1.67,pal:{...WOOD,...LACQUER},b:c=>table(1.67,1.67,1.9,c)},
   {k:'tv',n:'Media console + TV',g:'Living room',w:5.5,d:1.5,pal:WOOD,b:c=>tvConsole(5.5,1.5,c)},
   {k:'bookshelf',n:'Bookshelf',g:'Living room',w:3,d:1,pal:WOOD,b:c=>bookshelf(3,1,6,c)},
   {k:'dining',n:'Dining table',g:'Dining & kitchen',w:5,d:3,pal:WOOD,b:c=>table(5,3,2.5,c)},
@@ -264,7 +300,11 @@ const CAT = [
   {k:'rugRound',n:'Round rug 6′',g:'Rugs & decor',w:6,d:6,pal:RUG,b:c=>rugRound(3,c)},
   {k:'rugGeo810',n:'Geometric rug 8′ × 10′',g:'Rugs & decor',w:8,d:10,pal:{Geometric:'#a3644b'},b:()=>rugGeo(8,10)},
   {k:'rugGeo58',n:'Geometric rug 5′ × 8′',g:'Rugs & decor',w:5,d:8,pal:{Geometric:'#a3644b'},b:()=>rugGeo(5,8)},
-  {k:'arclamp',n:'Arc floor lamp',g:'Rugs & decor',w:5.4,d:1.4,pal:{Orange:'#e8651f',White:'#f1efe9',Black:'#232323','Rome green':'#2e4636'},b:c=>arcLamp(c)},
+  {k:'arclamp',n:'Arc floor lamp',g:'Rugs & decor',w:5.4,d:1.4,pal:{Orange:'#e8651f',White:'#f1efe9',Black:'#232323','Rome green':'#2e4636','Cherry red':'#b3122e'},b:c=>arcLamp(c)},
+  {k:'rugVintage810',n:'Vintage rug 8′ × 10′',g:'Rugs & decor',w:8,d:10,pal:{Burgundy:'#6e1d26',Rust:'#8f3a24',Navy:'#2a3550'},b:c=>rugVintage(8,10,c)},
+  {k:'rugVintage58',n:'Vintage rug 5′ × 8′',g:'Rugs & decor',w:5,d:8,pal:{Burgundy:'#6e1d26',Rust:'#8f3a24',Navy:'#2a3550'},b:c=>rugVintage(5,8,c)},
+  {k:'paperlamp',n:'Paper floor lamp',g:'Rugs & decor',w:2.2,d:2.2,pal:METAL,b:c=>paperLamp(c)},
+  {k:'art',n:'Large artwork 60″ × 42″',g:'Rugs & decor',w:5.2,d:.3,pal:{Terracotta:'#b5583a',Cobalt:'#1f47a8',Olive:'#69734f',Burgundy:'#6b1f2a'},b:c=>artwork(c)},
   {k:'lamp',n:'Floor lamp',g:'Rugs & decor',w:1.25,d:1.25,pal:METAL,b:c=>lamp(c)},
   {k:'plant',n:'Fiddle-leaf fig',g:'Rugs & decor',w:1.6,d:1.6,pal:POT,b:c=>plant(c)},
   {k:'mirror',n:'Floor mirror',g:'Rugs & decor',w:2,d:.5,pal:WOOD,b:c=>mirror(c)},
