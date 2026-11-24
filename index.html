@@ -325,6 +325,20 @@ function trayTable(c){ const g=new THREE.Group(), m=new THREE.MeshStandardMateri
   for(let i=0;i<4;i++){ const a=Math.PI/4+i*Math.PI/2; cy(g,.028,.022,h-.1,m,Math.cos(a)*r*.86,0,Math.sin(a)*r*.86,10); }
   return g; }
 
+function marbleTexture(c){ const key='m'+c; if(texCache.has(key)) return texCache.get(key); const S=512, cv=document.createElement('canvas'); cv.width=cv.height=S; const x=cv.getContext('2d'); seed=61;
+  x.fillStyle=c; x.fillRect(0,0,S,S); const lt=shade(c,.16), dk=shade(c,-.07), vein=shade(c,.32);
+  for(let i=0;i<60;i++){ const g=x.createRadialGradient(0,0,0,0,0,30+rnd()*90); const col=rnd()<.5?lt:dk; g.addColorStop(0,col+'55'); g.addColorStop(1,col+'00'); x.save(); x.translate(rnd()*S,rnd()*S); x.fillStyle=g; x.fillRect(-130,-130,260,260); x.restore(); }
+  const crack=(col,w,a)=>{ x.strokeStyle=col; x.globalAlpha=a; x.lineWidth=w; x.beginPath(); let px=rnd()*S, py=rnd()*S; x.moveTo(px,py); for(let k=0;k<14;k++){ px+=(rnd()-.5)*90; py+=(rnd()-.3)*70; x.lineTo(px,py); } x.stroke(); x.globalAlpha=1; };
+  for(let i=0;i<120;i++){ const g=x.createRadialGradient(0,0,0,0,0,8+rnd()*40); const col=rnd()<.45?lt:dk; g.addColorStop(0,col+'40'); g.addColorStop(1,col+'00'); x.save(); x.translate(rnd()*S,rnd()*S); x.scale(1+rnd()*2,1); x.fillStyle=g; x.fillRect(-60,-60,120,120); x.restore(); }
+  const soft=(col,w,a)=>{ x.strokeStyle=col; x.globalAlpha=a; x.lineWidth=w; x.lineCap='round'; x.beginPath(); let px=rnd()*S, py=rnd()*S; x.moveTo(px,py); for(let k=0;k<5;k++){ const cx=px+(rnd()-.5)*160, cy2=py+(rnd()-.5)*160; px+=(rnd()-.5)*140; py+=(rnd()-.5)*140; x.quadraticCurveTo(cx,cy2,px,py); } x.stroke(); x.globalAlpha=1; };
+  for(let i=0;i<18;i++) soft(vein,.5+rnd()*1.1,.12+rnd()*.18); for(let i=0;i<10;i++) soft(lt,4+rnd()*10,.06); for(let i=0;i<8;i++) soft(dk,2+rnd()*4,.18);
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=8; texCache.set(key,t); return t; }
+function marbleTable(R,h,c){ const g=new THREE.Group(), m=new THREE.MeshStandardMaterial({map:marbleTexture(c),roughness:.32,metalness:0});
+  const top=cy(g,R,R-.02,.13,m,0,h-.13,0,64);
+  const neck=R*.17, base=R*.36, ph=h-.13, pts=[]; for(let i=0;i<=24;i++){ const t=i/24; pts.push(new THREE.Vector2(neck+(base-neck)*Math.pow(1-t,1.25)+R*.05*Math.pow(t,8),t*ph)); }
+  pts.unshift(new THREE.Vector2(0,0)); pts.push(new THREE.Vector2(0,ph));
+  const ped=new THREE.Mesh(new THREE.LatheGeometry(pts,48),m); ped.castShadow=true; ped.receiveShadow=true; g.add(ped); return g; }
+
 const CAT = [
   {k:'sofa',n:'Sofa',g:'Living room',w:7,d:3,pal:FABRIC,b:c=>sofa(7,3,c)},
   {k:'loveseat',n:'Loveseat',g:'Living room',w:5,d:2.83,pal:FABRIC,b:c=>sofa(5,2.83,c)},
@@ -335,11 +349,13 @@ const CAT = [
   {k:'ottoman',n:'Ottoman',g:'Living room',w:2,d:2,pal:FABRIC,b:c=>ottoman(2,2,c)},
   {k:'coffee',n:'Coffee table',g:'Living room',w:4,d:2,pal:WOOD,b:c=>table(4,2,1.4,c)},
   {k:'coffeeRound',n:'Round coffee table',g:'Living room',w:3.5,d:3.5,pal:{Glass:GLASS_TOP,...WOOD},b:c=>roundTable(1.75,1.4,c,true)},
+  {k:'marblecoffee',n:'Marble pedestal coffee table',g:'Living room',w:3.5,d:3.5,pal:{Emperador:'#3b2a20',Nero:'#1f1d1c',Travertine:'#cdb796',Carrara:'#e6e4df'},b:c=>marbleTable(1.75,1.35,c)},
   {k:'side',n:'Side table',g:'Living room',w:1.67,d:1.67,pal:{...WOOD,...LACQUER},b:c=>table(1.67,1.67,1.9,c)},
   {k:'tv',n:'Media console + TV',g:'Living room',w:5.5,d:1.5,pal:WOOD,b:c=>tvConsole(5.5,1.5,c)},
   {k:'bookshelf',n:'Bookshelf',g:'Living room',w:3,d:1,pal:WOOD,b:c=>bookshelf(3,1,6,c)},
   {k:'dining',n:'Dining table',g:'Dining & kitchen',w:5,d:3,pal:WOOD,b:c=>table(5,3,2.5,c)},
   {k:'diningRound',n:'Round dining table',g:'Dining & kitchen',w:3.5,d:3.5,pal:WOOD,b:c=>roundTable(1.75,2.5,c,true)},
+  {k:'marbledining',n:'Marble pedestal dining table',g:'Dining & kitchen',w:3.5,d:3.5,pal:{Emperador:'#3b2a20',Nero:'#1f1d1c',Travertine:'#cdb796',Carrara:'#e6e4df'},b:c=>marbleTable(1.75,2.5,c)},
   {k:'chair',n:'Dining chair',g:'Dining & kitchen',w:1.5,d:1.75,pal:WOOD,b:c=>chair(c)},
   {k:'stool',n:'Counter stool',g:'Dining & kitchen',w:1.33,d:1.33,pal:{Leather:'#8d5636',...WOOD},b:c=>stool(c)},
   {k:'queen',n:'Queen bed',g:'Bedroom',w:5.33,d:7.17,pal:FABRIC,b:c=>bed(5.33,7.17,c,2)},
@@ -606,7 +622,7 @@ const STARTER=[
   {id:'starter-rug',type:'rugGeo810',x:6.5,z:7,rot:1.5708,color:'#a3644b'},
   {id:'starter-sofa',type:'sofa',x:6.75,z:2.75,rot:0,color:'#c8ac7f'},
   {id:'sofa-pillows',type:'pillows',x:7,z:2.5,rot:0,color:'#480c14'},
-  {id:'starter-coffee',type:'coffeeRound',x:7.25,z:7.25,rot:0,color:'#cfe3e6'},
+  {id:'starter-coffee',type:'marblecoffee',x:7.25,z:7.25,rot:0,color:'#3b2a20'},
   {id:'tv-console',type:'tv',x:6.75,z:11,rot:3.1416,color:'#6a4630'},
   {id:'arc-lamp',type:'arclamp',x:4.25,z:3.25,rot:-0.5236,color:'#e8651f'},
   {id:'artwork-1',type:'art',x:0.55,z:9.5,rot:1.5708,color:'#b5583a'},
