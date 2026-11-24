@@ -132,7 +132,7 @@ const $ = id => document.getElementById(id);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ---------- palettes ---------- */
-const FABRIC = {Oat:'#cbbba0',Cream:'#efe6d2',Linen:'#e2dccf',Slate:'#6f7f86',Navy:'#34465c',Olive:'#69734f','Rome green':'#2e4636',Cognac:'#8d5636',Blush:'#d3a89a',Charcoal:'#3b3d3f'};
+const FABRIC = {Oat:'#cbbba0',Cream:'#efe6d2',Beige:'#c8ac7f',Linen:'#e2dccf',Slate:'#6f7f86',Navy:'#34465c',Olive:'#69734f','Rome green':'#2e4636',Cognac:'#8d5636',Blush:'#d3a89a',Charcoal:'#3b3d3f'};
 const WOOD = {Oak:'#b98d5f',Walnut:'#6a4630',Ash:'#dcc8a6',Black:'#2a2a2a',White:'#e9e7e1',Burgundy:'#5e1f26'};
 const RUG = {Wool:'#ddd5c6',Sage:'#98a58f',Rust:'#a5634b',Indigo:'#3f4e6b',Stone:'#a9a39a'};
 const POT = {Terracotta:'#b5694a',White:'#eeeae2',Black:'#2b2b2b'};
@@ -286,7 +286,7 @@ const CAT = [
   {k:'loveseat',n:'Loveseat',g:'Living room',w:5,d:2.83,pal:FABRIC,b:c=>sofa(5,2.83,c)},
   {k:'sectional',n:'L-sectional',g:'Living room',w:9.33,d:6.5,pal:FABRIC,b:c=>sectional(9.33,6.5,c)},
   {k:'armchair',n:'Armchair',g:'Living room',w:2.75,d:2.9,pal:FABRIC,b:c=>sofa(2.75,2.9,c)},
-  {k:'pillows',n:'Throw pillows (pair)',g:'Living room',w:5.2,d:.8,pal:{Red:'#b3202a',Burgundy:'#6b1f2a',Rust:'#a5634b',Cream:'#efe6d2','Rome green':'#2e4636',Cobalt:'#1f47a8'},b:c=>throwPillows(5.2,c)},
+  {k:'pillows',n:'Throw pillows (pair)',g:'Living room',w:5.2,d:.8,pal:{Red:'#b3202a',Burgundy:'#6b1f2a',Oxblood:'#480c14',Rust:'#a5634b',Cream:'#efe6d2','Rome green':'#2e4636',Cobalt:'#1f47a8'},b:c=>throwPillows(5.2,c)},
   {k:'ottoman',n:'Ottoman',g:'Living room',w:2,d:2,pal:FABRIC,b:c=>ottoman(2,2,c)},
   {k:'coffee',n:'Coffee table',g:'Living room',w:4,d:2,pal:WOOD,b:c=>table(4,2,1.4,c)},
   {k:'coffeeRound',n:'Round coffee table',g:'Living room',w:3.5,d:3.5,pal:{Glass:GLASS_TOP,...WOOD},b:c=>roundTable(1.75,1.4,c,true)},
