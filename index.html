@@ -308,6 +308,23 @@ function loungeChair(c){ const g=new THREE.Group(), w=2.55, d=2.6, f=M(c,.72), f
     for(let i=0;i<3;i++){ const r=rbox(g,.06,.85,d-.5,.03,dk,s*(w/2-.02),.88,.05+(i-1)*.0); r.position.y=.88+.42+i*0; r.position.x=s*(w/2-.03-i*.12); r.rotation.z=s*-.09; r.scale.set(1,1,1); } });
   return g; }
 
+function birdPlant(c){ const g=new THREE.Group(); seed=5; cy(g,.72,.64,1.45,M(c,.8),0,0,0,40); cy(g,.66,.66,.04,M('#3b2c22'),0,1.39,0,30);
+  const leafM=new THREE.MeshStandardMaterial({color:new THREE.Color('#2b4a2a').convertSRGBToLinear(),roughness:.5,side:THREE.DoubleSide}), stemM=M('#56713f',.7);
+  const n=12; for(let i=0;i<n;i++){ const az=i/n*Math.PI*2+rnd()*.5, lean=.1+rnd()*.38, h=2.2+rnd()*2.4, L=1.5+rnd()*.9, W=L*.44;
+    const hs=new THREE.Group(); hs.position.set(0,1.4,0); hs.rotation.set(lean,az,0,'YXZ'); g.add(hs);
+    const st=new THREE.Mesh(new THREE.CylinderGeometry(.022,.038,h,6),stemM); st.position.y=h/2; st.castShadow=true; hs.add(st);
+    const sh=new THREE.Shape(); sh.moveTo(0,0); sh.bezierCurveTo(W*.62,L*.18,W*.55,L*.78,0,L); sh.bezierCurveTo(-W*.55,L*.78,-W*.62,L*.18,0,0);
+    const lh=new THREE.Group(); lh.position.y=h-.1; lh.rotation.x=.35+rnd()*.5; hs.add(lh);
+    const leaf=new THREE.Mesh(new THREE.ShapeGeometry(sh,12),leafM); leaf.rotation.y=(rnd()-.5)*1.4; leaf.castShadow=true; lh.add(leaf);
+    const rib=new THREE.Mesh(new THREE.CylinderGeometry(.012,.018,L*.95,5),stemM); rib.position.set(0,L*.47,.004); leaf.add(rib); }
+  return g; }
+function trayTable(c){ const g=new THREE.Group(), m=new THREE.MeshStandardMaterial({color:new THREE.Color(c).convertSRGBToLinear(),roughness:.28,metalness:.65,side:THREE.DoubleSide}), r=.78, h=2.05;
+  const fl=cy(g,r,r,.04,m,0,h-.08,0,48);
+  const wall=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.16,48,1,true),m); wall.position.y=h; wall.castShadow=true; g.add(wall);
+  [[h+.08,.035],[h-.1,.03]].forEach(([y,t])=>{ const ring=new THREE.Mesh(new THREE.TorusGeometry(r,t,10,64),m); ring.rotation.x=Math.PI/2; ring.position.y=y; g.add(ring); });
+  for(let i=0;i<4;i++){ const a=Math.PI/4+i*Math.PI/2; cy(g,.028,.022,h-.1,m,Math.cos(a)*r*.86,0,Math.sin(a)*r*.86,10); }
+  return g; }
+
 const CAT = [
   {k:'sofa',n:'Sofa',g:'Living room',w:7,d:3,pal:FABRIC,b:c=>sofa(7,3,c)},
   {k:'loveseat',n:'Loveseat',g:'Living room',w:5,d:2.83,pal:FABRIC,b:c=>sofa(5,2.83,c)},
@@ -348,6 +365,8 @@ const CAT = [
   {k:'paperlamp',n:'Paper floor lamp',g:'Rugs & decor',w:2.2,d:2.2,pal:METAL,b:c=>paperLamp(c)},
   {k:'art',n:'Large artwork 60″ × 42″',g:'Rugs & decor',w:5.2,d:.3,pal:{Terracotta:'#b5583a',Cobalt:'#1f47a8',Olive:'#69734f',Burgundy:'#6b1f2a'},b:c=>artwork(c)},
   {k:'lamp',n:'Floor lamp',g:'Rugs & decor',w:1.25,d:1.25,pal:METAL,b:c=>lamp(c)},
+  {k:'birdplant',n:'Bird of paradise',g:'Rugs & decor',w:3,d:3,pal:{Cream:'#ece4d4',White:'#f2f1ec',Terracotta:'#b5694a',Black:'#2b2b2b'},b:c=>birdPlant(c)},
+  {k:'traytable',n:'Tray side table',g:'Living room',w:1.6,d:1.6,pal:{Chrome:'#c9cdd0',Brass:'#b08d57',Black:'#2a2a2a'},b:c=>trayTable(c)},
   {k:'plant',n:'Fiddle-leaf fig',g:'Rugs & decor',w:1.6,d:1.6,pal:POT,b:c=>plant(c)},
   {k:'mirror',n:'Floor mirror',g:'Rugs & decor',w:2,d:.5,pal:WOOD,b:c=>mirror(c)},
 ];
@@ -593,6 +612,8 @@ const STARTER=[
   {id:'artwork-1',type:'art',x:0.55,z:9.5,rot:1.5708,color:'#b5583a'},
   {id:'bay-chair-1',type:'velvetchair',x:14.75,z:0,rot:0.35,color:'#2d4733'},
   {id:'bay-chair-2',type:'velvetchair',x:19.5,z:-0.5,rot:-0.35,color:'#2d4733'},
+  {id:'bay-table',type:'traytable',x:17.15,z:-0.35,rot:0,color:'#c9cdd0'},
+  {id:'bay-plant',type:'birdplant',x:17.15,z:-2.15,rot:0,color:'#ece4d4'},
   {id:'floor-mirror',type:'mirror',x:22,z:8.25,rot:-1.5708,color:'#e9e7e1'},
   {id:'starter-stool-1',type:'stool',x:16.8,z:12.1,rot:0,color:'#8d5636'},
   {id:'starter-stool-2',type:'stool',x:19.7,z:12.1,rot:0,color:'#8d5636'},
