@@ -132,7 +132,7 @@ const $ = id => document.getElementById(id);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ---------- palettes ---------- */
-const FABRIC = {Oat:'#cbbba0',Linen:'#e2dccf',Slate:'#6f7f86',Navy:'#34465c',Olive:'#69734f',Cognac:'#8d5636',Blush:'#d3a89a',Charcoal:'#3b3d3f'};
+const FABRIC = {Oat:'#cbbba0',Linen:'#e2dccf',Slate:'#6f7f86',Navy:'#34465c',Olive:'#69734f','Rome green':'#2e4636',Cognac:'#8d5636',Blush:'#d3a89a',Charcoal:'#3b3d3f'};
 const WOOD = {Oak:'#b98d5f',Walnut:'#6a4630',Ash:'#dcc8a6',Black:'#2a2a2a',White:'#e9e7e1'};
 const RUG = {Wool:'#ddd5c6',Sage:'#98a58f',Rust:'#a5634b',Indigo:'#3f4e6b',Stone:'#a9a39a'};
 const POT = {Terracotta:'#b5694a',White:'#eeeae2',Black:'#2b2b2b'};
@@ -205,6 +205,32 @@ function deskChair(c){ const g=new THREE.Group(), k=M('#2a2a2a',.4,.4);
 function rug(w,d,c){ const g=new THREE.Group(); bx(g,w,.035,d,M(c,1),0,0,0,false); bx(g,w-.7,.04,d-.7,M(shade(c,.07),1),0,0,0,false); bx(g,w-1.1,.045,d-1.1,M(c,1),0,0,0,false); return g; }
 function rugRound(r,c){ const g=new THREE.Group(); cy(g,r,r,.035,M(c,1),0,0,0,48); cy(g,r-.35,r-.35,.04,M(shade(c,.07),1),0,0,0,48); cy(g,r-.6,r-.6,.045,M(c,1),0,0,0,48); g.traverse(o=>o.castShadow=false); return g; }
 
+let geoTex=null;
+function geoTexture(){ if(geoTex) return geoTex; const W=352,H=512, cv=document.createElement('canvas'); cv.width=W; cv.height=H; const x=cv.getContext('2d');
+  const R=(a,b,c,d,col)=>{ x.fillStyle=col; x.fillRect(a*W,b*H,(c-a)*W,(d-b)*H); };
+  R(0,0,1,1,'#d8c7a0');
+  R(.735,0,1,.12,'#c6a983'); R(.375,.12,.735,.61,'#a3644b'); R(.735,.12,1,.385,'#c9978a');
+  R(.505,.385,.735,.61,'#9b9f7e'); R(.735,.385,1,.61,'#8b7563'); R(.505,.61,.735,.86,'#d3ba8f');
+  R(.735,.61,1,1,'#b9946f'); R(.505,.86,.735,1,'#b28c67');
+  x.save(); x.beginPath(); x.arc(.17*W,.85*H,.2*W*1.2,0,Math.PI*2); x.fillStyle='#c4a47b'; x.fill(); x.clip(); R(0,.86,.505,1,'#7f6c5d'); x.restore();
+  R(0,.86,.505,1,'rgba(127,108,93,.55)');
+  x.strokeStyle='rgba(70,55,45,.6)'; x.lineWidth=1.3;
+  [[.78,.95,.06],[.06,.27,.81]].forEach(([a,b,y])=>{ for(let i=0;i<5;i++){ x.beginPath(); x.moveTo(a*W,(y+i*.009)*H); x.lineTo(b*W,(y+i*.009)*H); x.stroke(); } });
+  seed=21; for(let i=0;i<2600;i++){ x.fillStyle=rnd()<.5?'rgba(255,248,230,.10)':'rgba(80,60,40,.07)'; x.fillRect(rnd()*W,rnd()*H,4+rnd()*22,1); }
+  x.strokeStyle='#b8a47f'; x.lineWidth=3; x.strokeRect(1.5,1.5,W-3,H-3);
+  geoTex=new THREE.CanvasTexture(cv); geoTex.encoding=THREE.sRGBEncoding; geoTex.anisotropy=8; return geoTex; }
+function rugGeo(w,d){ const g=new THREE.Group(), side=M('#bfa983',1), top=new THREE.MeshStandardMaterial({map:geoTexture(),roughness:1});
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,.045,d),[side,side,top,side,side,side]); m.position.y=.0225; m.receiveShadow=true; g.add(m); return g; }
+function arcLamp(c){ const g=new THREE.Group(), chrome=M('#d6d9dc',.15,.9);
+  cy(g,.62,.62,.16,M('#eceae6',.35),-2.1,0,0,40);
+  cy(g,.06,.06,4.1,chrome,-2.1,.16,0,12); cy(g,.075,.075,.18,chrome,-2.1,4.2,0,12);
+  const curve=new THREE.CubicBezierCurve3(new THREE.Vector3(-2.1,4.3,0),new THREE.Vector3(-2.1,6.9,0),new THREE.Vector3(.4,7.7,0),new THREE.Vector3(2.1,7.15,0));
+  const arc=new THREE.Mesh(new THREE.TubeGeometry(curve,48,.045,10,false),chrome); arc.castShadow=true; g.add(arc);
+  const shade=new THREE.Mesh(new THREE.SphereGeometry(.68,36,18,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:c,roughness:.25,metalness:.05,side:THREE.DoubleSide}));
+  shade.position.set(2.1,6.45,0); shade.castShadow=true; g.add(shade);
+  const glow=new THREE.Mesh(new THREE.CircleGeometry(.64,32),new THREE.MeshStandardMaterial({color:'#fff3d6',emissive:'#ffd9a0',emissiveIntensity:.9}));
+  glow.rotation.x=Math.PI/2; glow.position.set(2.1,6.47,0); g.add(glow); return g; }
+
 const CAT = [
   {k:'sofa',n:'Sofa',g:'Living room',w:7,d:3,pal:FABRIC,b:c=>sofa(7,3,c)},
   {k:'loveseat',n:'Loveseat',g:'Living room',w:5,d:2.83,pal:FABRIC,b:c=>sofa(5,2.83,c)},
@@ -233,6 +259,9 @@ const CAT = [
   {k:'rug58',n:'Rug 5′ × 8′',g:'Rugs & decor',w:5,d:8,pal:RUG,b:c=>rug(5,8,c)},
   {k:'runner',n:'Runner 2.5′ × 8′',g:'Rugs & decor',w:2.5,d:8,pal:RUG,b:c=>rug(2.5,8,c)},
   {k:'rugRound',n:'Round rug 6′',g:'Rugs & decor',w:6,d:6,pal:RUG,b:c=>rugRound(3,c)},
+  {k:'rugGeo810',n:'Geometric rug 8′ × 10′',g:'Rugs & decor',w:8,d:10,pal:{Geometric:'#a3644b'},b:()=>rugGeo(8,10)},
+  {k:'rugGeo58',n:'Geometric rug 5′ × 8′',g:'Rugs & decor',w:5,d:8,pal:{Geometric:'#a3644b'},b:()=>rugGeo(5,8)},
+  {k:'arclamp',n:'Arc floor lamp',g:'Rugs & decor',w:5.4,d:1.4,pal:{Orange:'#e8651f',White:'#f1efe9',Black:'#232323','Rome green':'#2e4636'},b:c=>arcLamp(c)},
   {k:'lamp',n:'Floor lamp',g:'Rugs & decor',w:1.25,d:1.25,pal:METAL,b:c=>lamp(c)},
   {k:'plant',n:'Fiddle-leaf fig',g:'Rugs & decor',w:1.6,d:1.6,pal:POT,b:c=>plant(c)},
   {k:'mirror',n:'Floor mirror',g:'Rugs & decor',w:2,d:.5,pal:WOOD,b:c=>mirror(c)},
