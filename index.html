@@ -229,6 +229,7 @@ function deskChair(c){ const g=new THREE.Group(), k=M('#2a2a2a',.4,.4);
   for(let i=0;i<5;i++){ const a=i*Math.PI*2/5; const m=bx(g,.9,.08,.1,k,Math.cos(a)*.45,.1,Math.sin(a)*.45); m.rotation.y=-a; }
   cy(g,.06,.06,1.25,k,0,.18,0,10); bx(g,1.6,.3,1.6,M(c),0,1.4,.05); bx(g,1.5,1.7,.22,M(c),0,1.75,-.7); return g; }
 function rug(w,d,c){ const g=new THREE.Group(); bx(g,w,.035,d,M(c,1),0,0,0,false); bx(g,w-.7,.04,d-.7,M(shade(c,.07),1),0,0,0,false); bx(g,w-1.1,.045,d-1.1,M(c,1),0,0,0,false); return g; }
+function rugPlain(w,d,c){ const g=new THREE.Group(); bx(g,w,.04,d,M(shade(c,-.03),1),0,0,0,false); bx(g,w-.16,.045,d-.16,M(c,1),0,0,0,false); return g; }
 function rugRound(r,c){ const g=new THREE.Group(); cy(g,r,r,.035,M(c,1),0,0,0,48); cy(g,r-.35,r-.35,.04,M(shade(c,.07),1),0,0,0,48); cy(g,r-.6,r-.6,.045,M(c,1),0,0,0,48); g.traverse(o=>o.castShadow=false); return g; }
 
 let geoTex=null;
@@ -337,6 +338,8 @@ const CAT = [
   {k:'rug58',n:'Rug 5′ × 8′',g:'Rugs & decor',w:5,d:8,pal:RUG,b:c=>rug(5,8,c)},
   {k:'runner',n:'Runner 2.5′ × 8′',g:'Rugs & decor',w:2.5,d:8,pal:RUG,b:c=>rug(2.5,8,c)},
   {k:'rugRound',n:'Round rug 6′',g:'Rugs & decor',w:6,d:6,pal:RUG,b:c=>rugRound(3,c)},
+  {k:'rugPlain810',n:'Plain rug 8′ × 10′',g:'Rugs & decor',w:8,d:10,pal:{Oxblood:'#480c14',...RUG},b:c=>rugPlain(8,10,c)},
+  {k:'rugPlain58',n:'Plain rug 5′ × 8′',g:'Rugs & decor',w:5,d:8,pal:{Oxblood:'#480c14',...RUG},b:c=>rugPlain(5,8,c)},
   {k:'rugGeo810',n:'Geometric rug 8′ × 10′',g:'Rugs & decor',w:8,d:10,pal:{Geometric:'#a3644b'},b:()=>rugGeo(8,10)},
   {k:'rugGeo58',n:'Geometric rug 5′ × 8′',g:'Rugs & decor',w:5,d:8,pal:{Geometric:'#a3644b'},b:()=>rugGeo(5,8)},
   {k:'arclamp',n:'Arc floor lamp',g:'Rugs & decor',w:5.4,d:1.4,pal:{Orange:'#e8651f',White:'#f1efe9',Black:'#232323','Rome green':'#2e4636','Cherry red':'#b3122e'},b:c=>arcLamp(c)},
